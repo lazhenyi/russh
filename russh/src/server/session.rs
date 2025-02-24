@@ -537,24 +537,42 @@ impl Session {
                             self.extended_data(id, ext, data)?;
                         }
                         Some(Msg::Channel(id, ChannelMsg::Eof)) => {
+                            self.has_pending_data(id);
+                            self.flush().ok();
+                            self.flush_pending(id).ok();
                             self.eof(id)?;
                         }
                         Some(Msg::Channel(id, ChannelMsg::Close)) => {
+                            self.has_pending_data(id);
+                            self.flush().ok();
+                            self.flush_pending(id).ok();
                             self.close(id)?;
                         }
                         Some(Msg::Channel(id, ChannelMsg::Success)) => {
+                            self.has_pending_data(id);
+                            self.flush().ok();
+                            self.flush_pending(id).ok();
                             self.channel_success(id)?;
                         }
                         Some(Msg::Channel(id, ChannelMsg::Failure)) => {
+                            self.has_pending_data(id);
+                            self.flush().ok();
+                            self.flush_pending(id).ok();
                             self.channel_failure(id)?;
                         }
                         Some(Msg::Channel(id, ChannelMsg::XonXoff { client_can_do })) => {
                             self.xon_xoff_request(id, client_can_do)?;
                         }
                         Some(Msg::Channel(id, ChannelMsg::ExitStatus { exit_status })) => {
+                            self.has_pending_data(id);
+                            self.flush().ok();
+                            self.flush_pending(id).ok();
                             self.exit_status_request(id, exit_status)?;
                         }
                         Some(Msg::Channel(id, ChannelMsg::ExitSignal { signal_name, core_dumped, error_message, lang_tag })) => {
+                            self.has_pending_data(id);
+                            self.flush().ok();
+                            self.flush_pending(id).ok();
                             self.exit_signal_request(id, signal_name, core_dumped, &error_message, &lang_tag)?;
                         }
                         Some(Msg::Channel(id, ChannelMsg::WindowAdjusted { new_size })) => {
@@ -605,6 +623,7 @@ impl Session {
                 }
             }
             self.flush()?;
+            stream_write.flush().await.ok();
 
             map_err!(
                 self.common
